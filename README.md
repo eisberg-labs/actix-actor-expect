@@ -1,4 +1,4 @@
-# Actix Json Responder [![Continuous Integration](https://github.com/eisberg-labs/actix-actor-expect/actions/workflows/ci.yml/badge.svg)](https://github.com/eisberg-labs/actix-actor-expect/actions/workflows/ci.yml) [![cargo-badge][]][cargo] [![license-badge][]][license]
+# Actix Actor Expect [![Continuous Integration](https://github.com/eisberg-labs/actix-actor-expect/actions/workflows/ci.yml/badge.svg)](https://github.com/eisberg-labs/actix-actor-expect/actions/workflows/ci.yml) [![cargo-badge][]][cargo] [![license-badge][]][license]
 
 Utility for unit testing actix actors, extension for `Mocker`. I wrote a blog post [Mocking Actix Actor without getting a gray hair](https://amarjanica.com/mocking-actix-actor-without-getting-a-gray-hair/) a
 while ago, you might find it useful.
@@ -8,7 +8,7 @@ Dependencies:
 
 ```toml
 [dev-dependencies]
-actix-actor-expect = "0.1.0-beta.1"
+actix-actor-expect = "0.1.0-beta.2"
 ```
 
 Code:
