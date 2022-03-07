@@ -45,7 +45,7 @@ async fn sends_hello_back() {
     let actor_expect = ActorExpect::<TestActor, Error>::expect_send(
         TestActorCommand::Echo("Message".to_string()),
         "Message".to_string(),
-        "Miss".to_string(),
+        None,
     );
     let actor = &actor_expect.addr;
 
