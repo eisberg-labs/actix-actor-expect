@@ -8,7 +8,7 @@ Dependencies:
 
 ```toml
 [dev-dependencies]
-actix-actor-expect = "0.1.0-beta.2"
+actix-actor-expect = "0.1.0-beta.3"
 ```
 
 Code:
