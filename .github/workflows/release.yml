@@ -34,14 +34,14 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "Development Build"
-      - uses: actions-rs/cargo@v1
-        with:
-          command: login
-          args: ${{ secrets.CRATES_TOKEN }}
-      - uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --dry-run
-      - uses: actions-rs/cargo@v1
-        with:
-          command: publish
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: login
+#          args: ${{ secrets.CRATES_TOKEN }}
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: publish
+#          args: --dry-run
+#      - uses: actions-rs/cargo@v1
+#        with:
+#          command: publish
