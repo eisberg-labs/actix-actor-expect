@@ -36,7 +36,7 @@ async fn sends_hello_back() {
     let actor_expect = ActorExpect::<TestActor, Error>::expect_send(
         TestActorCommand::Echo("Message".to_string()),
         "Message".to_string(),
-        "Miss".to_string(),
+        Some("Miss".to_string()),
     );
     let actor = &actor_expect.addr;
 
@@ -65,29 +65,42 @@ async fn sends_no_message() {
     let actor_expect = ActorExpect::<TestActor, Error>::expect_send(
         TestActorCommand::Hello,
         "Message".to_string(),
-        "Miss".to_string(),
+        Some("Miss".to_string()),
     );
 
     assert_eq!(actor_expect.total_calls(), 0_usize);
 }
 
-// TODO: how to test it?
-// use futures::FutureExt;
-// #[actix::test]
-// async fn placeholder_actor_doesnt_accept_incoming() {
-//     let process = async {
-//         let actor_expect = ActorExpect::<TestActor>::placeholder::<TestActorCommand>();
-//         let addr = actor_expect.addr;
-//         let req = addr.send(TestActorCommand::Echo("Message".to_string()));
-//         req.await;
-//         panic!("Should panic before!")
-//     };
-//
-//     let result = process.catch_unwind().await;
-//
-//     assert!(result.is_err());
-//     assert_eq!(
-//         &format!("{:?}", result.err().unwrap().downcast_ref::<&str>()),
-//         ""
-//     )
-// }
+#[test]
+fn mailbox_is_closed_for_unsupported_messages() {
+    let result = System::new().block_on(async {
+        let actor_expect = ActorExpect::<TestActor, Error>::expect_send(
+            TestActorCommand::Hello,
+            "Message".to_string(),
+            None,
+        );
+        actor_expect.addr.send(TestActorCommand::Dunno).await
+    });
+
+    assert!(result.is_err());
+    assert_eq!(
+        &format!("{:?}", result.err().unwrap()),
+        "MailboxError(Mailbox has closed)"
+    )
+}
+
+#[test]
+fn placeholder_actor_doesnt_accept_incoming() {
+    let result = System::new().block_on(async {
+        let actor_expect = ActorExpect::<TestActor, Error>::placeholder::<TestActorCommand>();
+        let addr = actor_expect.addr;
+        let req = addr.send(TestActorCommand::Echo("Message".to_string()));
+        req.await
+    });
+
+    assert!(result.is_err());
+    assert_eq!(
+        &format!("{:?}", result.err().unwrap()),
+        "MailboxError(Mailbox has closed)"
+    )
+}

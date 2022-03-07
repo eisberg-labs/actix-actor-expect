@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
@@ -20,16 +19,22 @@ pub struct ActorExpect<T: Sized + Unpin + 'static, Error: 'static> {
 impl<T: Sized + Unpin + 'static, Error: 'static> ActorExpect<T, Error> {
     /// Creates a mocker that accepts incoming and returns outgoing message.
     /// If other messages are received, default_outgoing message is returned.
-    pub fn expect_send<I, O>(incoming: I, outgoing: O, default_outgoing: O) -> Self
+    ///
+    /// # Arguments
+    /// * `incoming` - incoming message for actor.
+    /// * `outgoing` - response message for actor when incoming received.
+    /// * `default_outgoing` - default response message for anything other than `incoming`.
+    ///                        If `None` is set, actor mailbox is closed on unsupported message.
+    pub fn expect_send<I, O>(incoming: I, outgoing: O, default_outgoing: Option<O>) -> Self
     where
-        I: 'static + Clone + PartialEq + Message + Send + Debug,
+        I: 'static + Clone + PartialEq + Message + Send,
         I::Result: Send,
-        O: 'static + Clone + PartialEq + Debug,
+        O: 'static + Clone + PartialEq,
     {
         let log: ReceivedCallsLog = Arc::new(Mutex::new(vec![]));
         let cloned_log = log.clone(); // cloned right away to avoid error borrow of moved value
         let mocker = Mocker::<T>::mock(Box::new(move |msg, ctx| {
-            let result: O = ActorExpect::<T, Error>::process_messaging(
+            let result: Option<Result<O, Error>> = ActorExpect::<T, Error>::process_messaging(
                 &cloned_log,
                 msg,
                 incoming.clone(),
@@ -38,7 +43,7 @@ impl<T: Sized + Unpin + 'static, Error: 'static> ActorExpect<T, Error> {
                 ctx,
             );
 
-            let boxed_result: Box<Option<Result<O, Error>>> = Box::new(Some(Ok(result)));
+            let boxed_result: Box<Option<Result<O, Error>>> = Box::new(result);
             boxed_result
         }));
 
@@ -99,28 +104,25 @@ impl<T: Sized + Unpin + 'static, Error: 'static> ActorExpect<T, Error> {
         count
     }
 
-    fn process_messaging<
-        I: 'static + Clone + PartialEq + Debug,
-        O: 'static + Clone + PartialEq + Debug,
-    >(
+    fn process_messaging<I: 'static + Clone + PartialEq, O: 'static + Clone + PartialEq>(
         log: &ReceivedCallsLog,
         msg: Box<dyn Any>,
         incoming: I,
         outgoing: O,
-        default_outgoing: O,
+        default_outgoing: Option<O>,
         _ctx: &mut Context<Mocker<T>>,
-    ) -> O {
+    ) -> Option<Result<O, Error>> {
         let command: &I = msg
             .downcast_ref::<I>()
-            .unwrap_or_else(|| panic!("Cannot downcast command {:?}!", msg));
+            .unwrap_or_else(|| panic!("Cannot downcast command!"));
         let _ = log
             .lock()
             .unwrap_or_else(|_| panic!("Received calls log error!"))
             .push(Box::new(command.clone()));
         if command.clone() == incoming {
-            outgoing
+            Some(Ok(outgoing))
         } else {
-            default_outgoing
+            default_outgoing.map(Ok)
         }
     }
 }
