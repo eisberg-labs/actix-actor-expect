@@ -93,12 +93,11 @@ impl<T: Sized + Unpin + 'static, Error: 'static> ActorExpect<T, Error> {
             .unwrap_or_else(|_| panic!("Received calls log error!"))
             .iter()
         {
-            let it = item
-                .as_ref()
-                .downcast_ref::<MSG>()
-                .unwrap_or_else(|| panic!("Invalid item {:?}!", item));
-            if msg == *it {
-                count += 1
+            let it = item.as_ref().downcast_ref::<MSG>();
+            if let Some(message_kind) = it {
+                if msg == *message_kind {
+                    count += 1
+                }
             }
         }
         count
